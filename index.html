@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+  <meta charset="UTF-8" />
+  <title>Tra cứu điểm thi THPT Quốc Gia</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      padding: 30px;
+    }
+
+    input,
+    button {
+      padding: 10px 15px;
+      font-size: 16px;
+    }
+    button{
+      background-color: aqua;
+      border-radius: 10px;
+      cursor: pointer;
+      }
+
+    #result {
+      margin-top: 20px;
+      white-space: pre-line;
+    }
+  </style>
+</head>
+
+<body>
+  <div style="display: flex; flex-direction: column; justify-content: center; align-items: center; height: 100vh;">
+    <h2>🔍 Tra cứu điểm thi THPT Quốc Gia cho Huyền Trang</h2>
+    <div>
+      <input type="text" id="sbd" placeholder="Nhập Số báo danh..." />
+      <button onclick="traCuu()">Xem điểm</button>
+    </div>
+
+    <div id="result"></div>
+  </div>
+
+  <script>
+    async function traCuu() {
+      const sbd = document.getElementById("sbd").value.trim();
+      const resultDiv = document.getElementById("result");
+      if (!sbd) return alert("Vui lòng nhập số báo danh!");
+
+      resultDiv.textContent = "Đang tra cứu...";
+
+      // Dùng proxy để tránh CORS (free: allorigins.win hoặc corsproxy.io)
+      const proxyURL = `https://api.allorigins.win/get?url=${encodeURIComponent(
+        `https://vietnamnet.vn/giao-duc/diem-thi/tra-cuu-diem-thi-tot-nghiep-thpt/2023/${sbd}.html`
+      )}`;
+
+      try {
+        const res = await fetch(proxyURL);
+        const data = await res.json();
+        const html = data.contents;
+
+        // Tạo DOM ảo để parse
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(html, "text/html");
+
+        // Tìm bảng điểm thi
+        const table = doc.querySelector("table");
+        if (!table) {
+          resultDiv.textContent = "Không tìm thấy điểm thi cho SBD này.";
+          return;
+        }
+
+        let output = `📄 Kết quả cho SBD: ${sbd}\n\n`;
+        table.querySelectorAll("tr").forEach((row) => {
+          const cells = row.querySelectorAll("td");
+          if (cells.length === 2) {
+            output += `${cells[0].innerText.trim()}: ${cells[1].innerText.trim()}\n`;
+          }
+        });
+
+        resultDiv.textContent = output;
+
+      } catch (err) {
+        console.error(err);
+        resultDiv.textContent = "❌ Lỗi khi tra cứu. Kiểm tra lại số báo danh hoặc thử lại sau.";
+      }
+    }
+  </script>
+</body>
+
+</html>
